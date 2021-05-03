@@ -1,30 +1,24 @@
-import upickle.default._
-
-import javax.sound.sampled.AudioSystem
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import java.io.BufferedInputStream
-
 object Main extends App {
-  val date = "03-05-2021"
+  import java.text.SimpleDateFormat
+  import java.util.Calendar
+
+  val date =
+    new SimpleDateFormat("dd-MM-yyyy").format(Calendar.getInstance.getTime)
   val district = 188
+  val minimumAge = 18
+
+  import scala.concurrent.duration._
+  import scala.language.postfixOps
 
   val interval = 20 seconds
-
-  val clip = AudioSystem.getClip
-  val notificationSoundStream = getClass.getResourceAsStream("53.au")
-  // https://stackoverflow.com/questions/5529754/java-io-ioexception-mark-reset-not-supported
-  val notificationSoundBuffer = new BufferedInputStream(
-    notificationSoundStream
-  )
-  val inputStream = AudioSystem.getAudioInputStream(notificationSoundBuffer)
-  clip.open(inputStream)
 
   def sessionPredicate(session: ujson.Value): Boolean = {
     session("available_capacity").num > 0 && session(
       "min_age_limit"
-    ).num == 18
+    ).num == minimumAge
   }
+
+  import upickle.default._
 
   for (_ <- 1 to 500) {
     Thread.sleep(interval.toMillis)
@@ -39,8 +33,6 @@ object Main extends App {
     val availableCenters = vaccineCenters.filter(center => {
       center("sessions").arr.exists(sessionPredicate)
     })
-
-    clip.start()
 
     println("Available Centers: %d".format(availableCenters.length))
     println()
