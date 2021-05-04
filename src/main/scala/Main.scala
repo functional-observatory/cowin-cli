@@ -4,13 +4,13 @@ object Main extends App {
 
   val date =
     new SimpleDateFormat("dd-MM-yyyy").format(Calendar.getInstance.getTime)
-  val district = 188
+  val district = args.headOption.getOrElse(188)
   val minimumAge = 18
 
   import scala.concurrent.duration._
   import scala.language.postfixOps
 
-  val interval = 20 seconds
+  val interval = 10 seconds
 
   def sessionPredicate(session: ujson.Value): Boolean = {
     session("available_capacity").num > 0 && session(
@@ -26,7 +26,15 @@ object Main extends App {
     val apiUrl =
       s"https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=$district&date=$date"
 
-    val response = requests.get(apiUrl)
+    val response =
+      requests.get(
+        apiUrl,
+        headers = Map(
+          "user-agent" -> "Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36",
+          "referer" -> "https://selfregistration.cowin.gov.in/",
+          "origin" -> "https://selfregistration.cowin.gov.in"
+        )
+      )
 
     val vaccineCenters = read[ujson.Value](response.text()).obj("centers").arr
 
